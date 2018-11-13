@@ -1,0 +1,26 @@
+language: bash
+services: docker
+
+stages:
+  - build-mysql
+  #- test
+
+jobs:
+  include:
+    - stage: build-mysql
+      env:
+        - VERSION=5.7
+      before_script:
+        - NOSTRICT="$VERSION-nostrict"
+        - PESCMS="$VERSION-pescms"
+        - HUB_REGISTRY_IMAGE="$HUB_REGISTRY_USER/mysql"
+        - cd mysql
+      script:
+        - docker build -t "$HUB_REGISTRY_IMAGE:$NOSTRICT" . -f "mysql-$NOSTRICT"
+        - docker build -t "$HUB_REGISTRY_IMAGE:$PESCMS" . -f "mysql-$PESCMS"
+      after_script:
+        - docker login -u "$HUB_REGISTRY_USER" -p "$HUB_REGISTRY_PASSWORD"
+        - docker push "$HUB_REGISTRY_IMAGE:$NOSTRICT"
+        - docker push "$HUB_REGISTRY_IMAGE:$PESCMS"
+
+# vim:set et ts=2 sw=2:
